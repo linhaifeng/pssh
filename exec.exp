@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f 
+set timeout 1
+
+set type [lindex $argv 0]
+set host [lindex $argv 1]
+set port [lindex $argv 2]
+set user [lindex $argv 3]
+set password [lindex $argv 4]
+set cmd [lindex $argv 5]
+set src [lindex $argv 6]
+set dest [lindex $argv 7]
+
+if { $type == "-f" } {
+	spawn /usr/bin/scp -r -P $port $src $user@$host:$dest
+} else {
+	spawn /usr/bin/ssh -p $port $user@$host $cmd
+}
+
+expect {
+	"Connection established." { 
+		send_user "connection success!\n"
+		exp_continue
+	}
+	"*refused*" {
+		send_user "connection failed!\nplease check your host, port, username and password\n"
+		exit
+	}
+	eof {
+		send_user "connection failed!\n"
+	}
+}
+
+expect "*continue*(yes/no)" {send "yes\n"}
+expect "*password:" { send "$password\n"}
+expect eof
