@@ -1,12 +1,26 @@
 #!/bin/sh
 #set -x
 
+is_redhat=true
+is_debian=false
+redhat_version=/etc/redhat-version
+debian_version=/etc/debian_version
+if [ -f {$redhat_version} ];then
+   is_redhat=true
+   is_debian=false
+elif [ -f {$debian_version} ];then
+   is_redhat=false
+   is_debian=true
+else
+   is_redhat=is_debian=false	
+fi
+
 file=$0
 shell_dir=$(dirname $0)
 hosts_list=${shell_dir}/hosts.list
 default_port=22
 cmd=$@
-type=$1
+type="command"
 src=$2
 dest=$3
 
@@ -47,7 +61,11 @@ check_expect(){
 	res=$(whereis expect)
 	path=$(echo ${res}|awk -F":" '{print $2}')
 	if [ "$path" = "" ];then
-		yum -y install expect
+	    if [ {$is_redhat} ];then
+			yum -y install expect
+	    else
+			sudo apt-get install expect
+	    fi
 	fi
 }
 
@@ -68,20 +86,58 @@ check_env(){
 check_env;
 
 
-case "$1" in
-	-a)
-		append_host
-		;;
-	-f)
-		;;
-	-c)		
-		shift
-		cmd=$@
-		;;
-	*)
-		echo $"Usage: {-f source destination |-c command}"
-		exit 1;
-esac
+#case "$1" in
+#	-a)
+#		append_host
+#		;;
+#	-f)
+#		;;
+#	-c)		
+#		shift
+#		cmd=$@
+#		;;
+#	*)
+#		echo $"Usage: {-f source destination |-c \"command\"}"
+#		exit 1;
+#esac
+
+while getopts ":ac:f:h:r::" opt; do
+    case ${opt} in
+		a|--append)
+			append_host;
+			;;
+		f|--file)
+			type="file"
+			;;
+		c|--command)
+#			shift
+			cmd=${OPTARG}
+#			append_host
+			;;	
+		h|--host_file)
+			host_file=${OPTARG}
+			host_dir=$(cd "$(dirname "${host_file}")"; pwd);
+			host_path=${host_dir}/${host_file}
+			
+			if [ -f "${host_path}" ];then
+				hosts_list="${host_path}"
+			fi		
+			;;
+		r|--remote_dir)
+			echo ${OPTIND}
+			remote_dir=${OPTARG}
+			${OPTIND} ++ 
+			local_dir=${OPTARG}
+			echo ${local_dir}, ${OPTIND}
+			exit
+			;;
+		:)
+			echo $"Usage: {-f source destination |-c \"command\"}"
+			exit 1
+			;;		 
+	esac
+done
+
 
 while read -r host_info
 do
@@ -98,7 +154,7 @@ do
 
 	echo "===========seperator line========"
 	echo ${host}:
-	if [ "$type" = "-f" ];then
+	if [ "$type" = "file" ];then
 		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "" ${src} ${dest}) 
 	else
 		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "${cmd}")
