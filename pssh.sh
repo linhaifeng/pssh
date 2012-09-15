@@ -1,19 +1,6 @@
 #!/bin/sh
 #set -x
-
-is_redhat=true
-is_debian=false
-redhat_version=/etc/redhat-version
-debian_version=/etc/debian_version
-if [ -f {$redhat_version} ];then
-   is_redhat=true
-   is_debian=false
-elif [ -f {$debian_version} ];then
-   is_redhat=false
-   is_debian=true
-else
-   is_redhat=is_debian=false	
-fi
+. ./env.sh
 
 file=$0
 shell_dir=$(dirname $0)
@@ -50,56 +37,7 @@ append_host(){
 	fi
 }
 
-init(){
-	if [ ! -f "${hosts_list}" ];then
-		touch ${hosts_list}
-		append_host	
-	fi
-}
-
-check_expect(){
-	res=$(whereis expect)
-	path=$(echo ${res}|awk -F":" '{print $2}')
-	if [ "$path" = "" ];then
-	    if [ {$is_redhat} ];then
-			yum -y install expect
-	    else
-			sudo apt-get install expect
-	    fi
-	fi
-}
-
-check_scp(){
-	res=$(whereis scp)
-	path=$(echo ${res}|awk -F":" '{print $2}')
-	if [ "$path" = "" ];then
-		yum -y install scp
-	fi
-}
-
-check_env(){
-	check_expect;
-	check_scp;
-	init	
-}
-
 check_env;
-
-
-#case "$1" in
-#	-a)
-#		append_host
-#		;;
-#	-f)
-#		;;
-#	-c)		
-#		shift
-#		cmd=$@
-#		;;
-#	*)
-#		echo $"Usage: {-f source destination |-c \"command\"}"
-#		exit 1;
-#esac
 
 while getopts ":ac:f:h:r::" opt; do
     case ${opt} in
@@ -138,7 +76,7 @@ while getopts ":ac:f:h:r::" opt; do
 	esac
 done
 
-
+num=1
 while read -r host_info
 do
 	host_port=$(echo ${host_info}|awk '{print $1}')
@@ -153,7 +91,7 @@ do
 	password=$(echo ${host_info}|awk '{print $3}')
 
 	echo "===========seperator line========"
-	echo ${host}:
+	echo "[${num}] ${host}:"
 	if [ "$type" = "file" ];then
 		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "" ${src} ${dest}) 
 	else
@@ -161,4 +99,5 @@ do
 	fi
 	
 	echo "${res}"|sed -n '3,$p'
+	num=$((${num} + 1))
 done < ${hosts_list}
