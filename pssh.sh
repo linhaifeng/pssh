@@ -3,7 +3,7 @@
 . ./env.sh
 
 file=$0
-shell_dir=$(dirname $0)
+shell_dir=$(cd "$(dirname "$0")";pwd)
 hosts_list=${shell_dir}/hosts.list
 default_port=22
 cmd=$@
@@ -76,28 +76,5 @@ while getopts ":ac:f:h:r::" opt; do
 	esac
 done
 
-num=1
-while read -r host_info
-do
-	host_port=$(echo ${host_info}|awk '{print $1}')
-
-	host=$(echo ${host_port}|awk -F ":" '{print $1}')
-	port=$(echo ${host_port}|awk -F ":" '{print $2}')
-	if [ "" = "${port}" ];then
-		port=${default_port}
-    fi
-	
-	username=$(echo ${host_info}|awk '{print $2}')
-	password=$(echo ${host_info}|awk '{print $3}')
-
-	echo "===========seperator line========"
-	echo "[${num}] ${host}:"
-	if [ "$type" = "file" ];then
-		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "" ${src} ${dest}) 
-	else
-		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "${cmd}")
-	fi
-	
-	echo "${res}"|sed -n '3,$p'
-	num=$((${num} + 1))
-done < ${hosts_list}
+. ./thread.sh
+multi_thread_execute ${hosts_list}
