@@ -8,6 +8,7 @@ exec.exp 主要实现密码等交互信息的自动输入
 hosts.list中主机信息格式如下
 host1 username password(如果是默认的22端口，可以省略:port参数)
 host2:port username password
-2、执行远程命令，使用pssh.sh -c '命令 参数'
-3、实现远程文件传输，使用pssh.sh -f 源文件 目标文件
-4、查看帮助，使用pssh.sh
+2、指定集群服务器信息文件,使用pssh.sh -h 文件名
+3、执行远程命令，使用pssh.sh -c '命令 参数'
+4、实现远程文件传输，使用pssh.sh -f 源文件 目标文件
+5、查看帮助，使用pssh.sh
