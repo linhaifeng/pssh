@@ -39,19 +39,19 @@ append_host(){
 
 check_env;
 
-while getopts ":ac:f:h:r::" opt; do
+while getopts ":ac:d:h:u::" opt; do
     case ${opt} in
 		a|--append)
 			append_host;
-			;;
-		f|--file)
-			type="file"
 			;;
 		c|--command)
 #			shift
 			cmd=${OPTARG}
 #			append_host
-			;;	
+			;;
+		d|--download)
+			type="download"
+			;;
 		h|--host_file)
 			host_file=${OPTARG}
 			host_dir=$(cd "$(dirname "${host_file}")"; pwd);
@@ -61,16 +61,11 @@ while getopts ":ac:f:h:r::" opt; do
 				hosts_list="${host_path}"
 			fi		
 			;;
-		r|--remote_dir)
-			echo ${OPTIND}
-			remote_dir=${OPTARG}
-			${OPTIND} ++ 
-			local_dir=${OPTARG}
-			echo ${local_dir}, ${OPTIND}
-			exit
+		u|--upload)
+			type="upload"
 			;;
-		:)
-			echo $"Usage: {-f source destination |-c \"command\"}"
+		*|:)
+			echo $"Usage: {-a|[-h] hosts_file [-d|-u] source destination |-c \"command\"}"
 			exit 1
 			;;		 
 	esac

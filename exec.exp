@@ -1,5 +1,5 @@
 #!/usr/bin/expect -D 1 
-set timeout 3
+set timeout 2
 
 set type [lindex $argv 0]
 set host [lindex $argv 1]
@@ -10,8 +10,10 @@ set cmd [lindex $argv 5]
 set src [lindex $argv 6]
 set dest [lindex $argv 7]
 
-if { $type == "file" } {
+if { $type == "upload" } {
 	spawn /usr/bin/scp -r -P $port $src $user@$host:$dest
+} elseif { $type == "download" } {
+	spawn /usr/bin/scp -r -P $port $user@$host:$src $dest
 } else {
 	spawn /usr/bin/ssh -p $port $user@$host "$cmd"
 }

@@ -14,13 +14,17 @@ function execute {
 	username=$(echo ${host_info}|awk '{print $2}')
 	password=$(echo ${host_info}|awk '{print $3}')
 
-	if [ "$type" = "file" ];then
-		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "" ${src} ${dest}) 
+	if [ "$type" = "upload" -o "$type" = "download" ];then
+		dest_dir=${dest}/${host}
+		mkdir -p ${dest_dir}
+		chmod -R 777 ${dest_dir}
+		
+		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "" ${src} ${dest_dir}) 
 	else
 		res=$(expect ${shell_dir}/exec.exp $type ${host} ${port} ${username} ${password} "${cmd}")
 	fi
 	
-	echo "[${num}] ${host}:"
+	echo "[$((${num}+1))] ${host}:"
 	
 	echo "${res}"|sed -n '3,$p'
 	
