@@ -34,7 +34,7 @@ function execute {
 
 function multi_thread_execute {
 	hosts_file=$1
-	lines=$(cat ${hosts_file}|grep -v '^$'|wc -l)
+	lines=$(cat ${hosts_file}|grep -v '^#'|grep -v '^$'|wc -l)
 
 	tmp_fifofile="/tmp/$.fifo"
 	mkfifo $tmp_fifofile
